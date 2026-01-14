@@ -1,0 +1,11 @@
+version: "2"
+authtoken_from_env: true
+tunnels:
+  api:
+    addr: 3001
+    proto: http
+    schemes: [https]
+  web:
+    addr: 5173
+    proto: http
+    schemes: [https]

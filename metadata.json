@@ -1,0 +1,5 @@
+{
+  "name": "Project Catalyst",
+  "description": "A modern web application for clients to submit project details. It features an AI-powered analysis to provide an initial summary, categorization, and complexity estimation to streamline the quoting process.",
+  "requestFramePermissions": []
+}
