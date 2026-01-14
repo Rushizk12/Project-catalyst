@@ -7,10 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-
-    "start": "node --loader tsx backend.ts"
+    "start": "tsx server/backend.ts"
   },
   "dependencies": {
+    "tsx": "4.19.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
 
@@ -27,7 +27,7 @@
   "devDependencies": {
     "vite": "^6.2.0",
     "typescript": "~5.8.2",
-    "tsx": "^4.19.1",
+    
     "@types/node": "^22.14.0",
     "@types/express": "^4.17.21"
   }
