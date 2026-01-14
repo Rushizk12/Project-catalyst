@@ -32,21 +32,25 @@ const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 app.use(helmet());
 
-/* 🔒 FIXED CORS CONFIG (IMPORTANT) */
-const allowedOrigins = [
-  'https://project-catalyst-three.vercel.app',
-  'https://project-catalyst-pee06yx58-rushizk12s-projects.vercel.app',
-];
-
+/* 🔒 FIXED CORS CONFIG - ALLOWS ALL VERCEL DOMAINS */
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // allow curl / health checks
-      if (allowedOrigins.includes(origin)) return callback(null, true);
+      // Allow requests with no origin (like mobile apps, Postman, curl)
+      if (!origin) return callback(null, true);
+      
+      // Allow all Vercel domains
+      if (origin.includes('vercel.app')) return callback(null, true);
+      
+      // Allow localhost for development
+      if (origin.includes('localhost')) return callback(null, true);
+      
+      // Reject all other origins
       return callback(new Error('Not allowed by CORS'));
     },
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type'],
+    credentials: true,
   })
 );
 
@@ -195,9 +199,12 @@ app.post('/api/chat', async (req, res) => {
 });
 
 app.post('/api/submit', async (req, res) => {
+  console.log('📥 Received submission:', req.body); // Debug log
+  
   const parsed = SubmitBody.safeParse(req.body);
   
   if (!parsed.success) {
+    console.error('❌ Validation failed:', parsed.error.issues);
     return res.status(400).json({
       error: 'Validation failed',
       issues: parsed.error.issues,
@@ -234,9 +241,10 @@ app.post('/api/submit', async (req, res) => {
       aiAnalysis: d.aiAnalysis || undefined,
     });
 
+    console.log('✅ Submission successful!');
     return res.json({ ok: true });
   } catch (err) {
-    console.error(err);
+    console.error('❌ Submit error:', err);
     return res.status(500).send('Submit failed');
   }
 });
