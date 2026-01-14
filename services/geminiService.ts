@@ -49,17 +49,26 @@ export const chatWithGemini = async (
   return data.reply;
 };
 
-/* ✅ Submit project */
+/* ✅ Submit project - FIXED VERSION */
 export const submitProject = async (
   payload: ProjectFormData & { aiAnalysis: AIAnalysis | null }
 ): Promise<void> => {
+  // ✅ Extract only the fields the backend expects (remove aiAnalysis)
+  const { aiAnalysis, ...formData } = payload;
+  
+  console.log('📤 Sending to backend:', formData);
+  
   const res = await fetch(api('/api/submit'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(formData),
   });
 
   if (!res.ok) {
-    throw new Error(await res.text() || 'Failed to submit');
+    const errorText = await res.text();
+    console.error('❌ Backend error:', errorText);
+    throw new Error(errorText || 'Failed to submit');
   }
+  
+  console.log('✅ Project submitted successfully!');
 };

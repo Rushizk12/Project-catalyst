@@ -1,4 +1,3 @@
-
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { ProjectFormData, AIAnalysis } from '../types';
 import { analyzeProjectDescription, submitProject } from '../services/geminiService';
@@ -105,15 +104,22 @@ const ProjectForm: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // ✅ Debug: Log the form data being submitted
+    console.log('📤 Form data being submitted:', formData);
+    
     setIsSubmitting(true);
     setSubmitError(null);
+    
     try {
       await submitProject({ ...formData, aiAnalysis: analysisResult });
       setIsSubmitting(false);
       setSubmitSuccess(true);
+      console.log('✅ Submission successful!');
     } catch (error) {
+      console.error('❌ Submit error:', error);
       setIsSubmitting(false);
-      setSubmitError(error instanceof Error ? error.message : 'Submission failed');
+      setSubmitError(error instanceof Error ? error.message : 'Submission failed. Please try again.');
     }
   };
   
