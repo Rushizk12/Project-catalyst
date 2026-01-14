@@ -199,7 +199,7 @@ app.post('/api/chat', async (req, res) => {
 });
 
 app.post('/api/submit', async (req, res) => {
-  console.log('📥 Received submission:', req.body); // Debug log
+  console.log('📥 Received submission:', req.body);
   
   const parsed = SubmitBody.safeParse(req.body);
   
