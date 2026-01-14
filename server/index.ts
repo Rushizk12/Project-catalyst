@@ -5,33 +5,58 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { GoogleGenAI, Type } from '@google/genai';
-import { appendSubmissionRow, extractSpreadsheetIdFromUrl } from './googleSheets';
+import { appendSubmissionRow } from './googleSheets';
 import { trySendSubmissionEmails } from './email';
 
+/* =========================
+   App setup
+========================= */
+
 const app = express();
-const port = process.env.PORT ? Number(process.env.PORT) : 3001;
-const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+const port = Number(process.env.PORT) || 3001;
+
+/* =========================
+   Gemini AI setup (CORRECT)
+========================= */
+
+const apiKey = process.env.GEMINI_API_KEY;
 if (!apiKey) {
-  console.warn('GEMINI_API_KEY not set. AI endpoints will return 500 until configured.');
+  console.warn('⚠️ GEMINI_API_KEY not set');
 }
 
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+
+/* =========================
+   Middleware
+========================= */
+
 app.use(helmet());
-app.use(cors({ origin: true, credentials: false }));
+app.use(cors({ origin: true }));
 app.use(express.json({ limit: '1mb' }));
 
-const limiter = rateLimit({ windowMs: 60_000, max: 30 });
-app.use('/api/', limiter);
+app.use(
+  '/api/',
+  rateLimit({
+    windowMs: 60_000,
+    max: 30,
+  })
+);
+
+/* =========================
+   Zod schemas
+========================= */
 
 const AnalyzeBody = z.object({
-  description: z.string().min(10, 'Description is too short')
+  description: z.string().min(10),
 });
 
 const ChatBody = z.object({
-  messages: z.array(z.object({
-    role: z.enum(['user', 'model']),
-    content: z.string().min(1)
-  })).min(1)
+  messages: z.array(
+    z.object({
+      role: z.enum(['user', 'model']),
+      content: z.string().min(1),
+    })
+  ),
 });
 
 const SubmitBody = z.object({
@@ -44,85 +69,96 @@ const SubmitBody = z.object({
   projectDescription: z.string().min(10),
   projectType: z.enum(['web', 'mobile', 'design', 'other', 'hardware']),
   budget: z.string().min(1),
-  aiAnalysis: z.object({
-    summary: z.string(),
-    category: z.enum(['Web Development', 'Mobile App Development', 'UI/UX Design', 'Other', 'Hardware']),
-    estimatedComplexity: z.enum(['Low', 'Medium', 'High'])
-  }).nullable().optional()
+  aiAnalysis: z
+    .object({
+      summary: z.string(),
+      category: z.string(),
+      estimatedComplexity: z.enum(['Low', 'Medium', 'High']),
+    })
+    .nullable()
+    .optional(),
 });
+
+/* =========================
+   Gemini JSON schema
+========================= */
 
 const analysisSchema = {
   type: Type.OBJECT,
   properties: {
     summary: { type: Type.STRING },
-    category: { type: Type.STRING, enum: ['Web Development', 'Mobile App Development', 'UI/UX Design', 'Other', 'Hardware'] },
-    estimatedComplexity: { type: Type.STRING, enum: ['Low', 'Medium', 'High'] },
+    category: { type: Type.STRING },
+    estimatedComplexity: {
+      type: Type.STRING,
+      enum: ['Low', 'Medium', 'High'],
+    },
   },
-  required: ['summary', 'category', 'estimatedComplexity']
+  required: ['summary', 'category', 'estimatedComplexity'],
 };
 
-// Helper to normalize GenAI responses across SDK variants
+/* =========================
+   Helper
+========================= */
+
 async function getResponseText(resp: any): Promise<string> {
   try {
-    if (!resp) return '';
-    if (typeof resp.text === 'string') return resp.text;
-    if (typeof resp.text === 'function') {
+    if (typeof resp?.text === 'function') {
       const v = resp.text();
-      // Some SDKs return string; others return Promise<string>
-      if (typeof v === 'string') return v;
-      if (v && typeof v.then === 'function') return await v;
+      return typeof v === 'string' ? v : await v;
     }
-    const parts = resp.candidates?.[0]?.content?.parts;
+    const parts = resp?.candidates?.[0]?.content?.parts;
     if (Array.isArray(parts)) {
       return parts.map((p: any) => p?.text ?? '').join('');
     }
-  } catch {
-    // swallow
-  }
+  } catch {}
   return '';
 }
 
+/* =========================
+   Routes
+========================= */
+
 app.post('/api/analyze', async (req, res) => {
-  if (!ai) {
-    return res.status(500).send('Server missing GEMINI_API_KEY');
-  }
-  const parse = AnalyzeBody.safeParse(req.body);
-  if (!parse.success) {
-    return res.status(400).send(parse.error.issues[0]?.message || 'Invalid input');
-  }
+  if (!ai) return res.status(500).send('AI not configured');
+
+  const parsed = AnalyzeBody.safeParse(req.body);
+  if (!parsed.success) return res.status(400).send('Invalid input');
+
   try {
-    const prompt = `Analyze the following project description for a freelance developer. Based on the description, provide a concise one-sentence summary, categorize the project into one of the predefined categories, and estimate its complexity.\n\nProject Description:\n---\n${parse.data.description}\n---\n\nReturn strict JSON.`;
+    const prompt = `
+Analyze the following project description and return strict JSON.
+
+${parsed.data.description}
+`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
-      generationConfig: { // was: config
+      config: {
         responseMimeType: 'application/json',
         responseSchema: analysisSchema,
+        temperature: 0.6,
+        maxOutputTokens: 500,
       },
     });
 
     const raw = await getResponseText(response);
-    const text = raw?.trim?.() || '';
-    const jsonStr = text.startsWith('```') ? text.replace(/```json\n?|```/g, '') : text;
-    const parsed = JSON.parse(jsonStr);
-    return res.json(parsed);
+    const cleaned = raw.replace(/```json|```/g, '').trim();
+    return res.json(JSON.parse(cleaned));
   } catch (err) {
-    console.error('Analyze error', err);
-    return res.status(500).send('Failed to analyze');
+    console.error(err);
+    return res.status(500).send('Analyze failed');
   }
 });
 
 app.post('/api/chat', async (req, res) => {
-  if (!ai) {
-    return res.status(500).send('Server missing GEMINI_API_KEY');
-  }
-  const parse = ChatBody.safeParse(req.body);
-  if (!parse.success) {
-    return res.status(400).send(parse.error.issues[0]?.message || 'Invalid input');
-  }
+  if (!ai) return res.status(500).send('AI not configured');
+
+  const parsed = ChatBody.safeParse(req.body);
+  if (!parsed.success) return res.status(400).send('Invalid input');
+
   try {
-    const prompt = parse.data.messages
+    const prompt = parsed.data.messages
       .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
       .join('\n');
 
@@ -131,66 +167,52 @@ app.post('/api/chat', async (req, res) => {
       contents: prompt,
     });
 
-    const reply = (await getResponseText(response)) || '';
+    const reply = await getResponseText(response);
     return res.json({ reply });
   } catch (err) {
-    console.error('Chat error', err);
-    return res.status(500).send('Failed to chat');
+    console.error(err);
+    return res.status(500).send('Chat failed');
   }
 });
 
-// Admin emails (comma-separated). Supports ADMIN_NOTIFICATION_EMAILS or single ADMIN_EMAIL.
-const adminEmails: string[] = (process.env.ADMIN_NOTIFICATION_EMAILS || process.env.ADMIN_EMAIL || '')
-  .split(',')
-  .map(e => e.trim())
-  .filter(Boolean);
-
 app.post('/api/submit', async (req, res) => {
-  const parse = SubmitBody.safeParse(req.body);
-  if (!parse.success) {
-    return res.status(400).send(parse.error.issues[0]?.message || 'Invalid input');
-  }
+  const parsed = SubmitBody.safeParse(req.body);
+  if (!parsed.success) return res.status(400).send('Invalid input');
+
   try {
-    const data = parse.data;
+    const d = parsed.data;
     const timestamp = new Date().toISOString();
-    const row = [
+
+    await appendSubmissionRow([
       timestamp,
-      data.name,
-      data.email,
-      data.phoneNumber,
-      data.collegeName,
-      data.address,
-      data.projectTitle,
-      data.projectDescription,
-      data.projectType,
-      data.budget,
-      data.aiAnalysis?.summary || '',
-      data.aiAnalysis?.category || '',
-      data.aiAnalysis?.estimatedComplexity || ''
-    ];
-    await appendSubmissionRow(row);
-    // Fire-and-forget email sending; don't block the response on email errors
-    try {
-      void trySendSubmissionEmails({
-        name: data.name,
-        email: data.email,
-        projectTitle: data.projectTitle,
-        projectDescription: data.projectDescription,
-        projectType: data.projectType,
-        budget: data.budget,
-        aiAnalysis: data.aiAnalysis || undefined,
-        // Notify admins if configured
-        adminRecipients: adminEmails.length ? adminEmails : undefined,
-      });
-    } catch (e) {
-      // Already handled/logged inside email service
-    }
+      d.name,
+      d.email,
+      d.phoneNumber,
+      d.collegeName,
+      d.address,
+      d.projectTitle,
+      d.projectDescription,
+      d.projectType,
+      d.budget,
+      d.aiAnalysis?.summary || '',
+      d.aiAnalysis?.category || '',
+      d.aiAnalysis?.estimatedComplexity || '',
+    ]);
+
+    void trySendSubmissionEmails({
+      name: d.name,
+      email: d.email,
+      projectTitle: d.projectTitle,
+      projectDescription: d.projectDescription,
+      projectType: d.projectType,
+      budget: d.budget,
+      aiAnalysis: d.aiAnalysis || undefined,
+    });
+
     return res.json({ ok: true });
   } catch (err) {
-    console.error('Submit error', err);
-    const message = err instanceof Error ? err.message : String(err);
-    const responseMessage = process.env.NODE_ENV === 'production' ? 'Failed to save submission' : message;
-    return res.status(500).send(responseMessage);
+    console.error(err);
+    return res.status(500).send('Submit failed');
   }
 });
 
@@ -198,27 +220,14 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
 
-app.get('/api/debug-env', (_req, res) => {
-  const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID || extractSpreadsheetIdFromUrl(process.env.GOOGLE_SHEETS_SPREADSHEET_URL || '') || null;
-  const hasKey = Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY);
-  const hasEmail = Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL);
-  const sheet = process.env.GOOGLE_SHEETS_WORKSHEET_TITLE || 'Sheet1';
-  res.json({
-    spreadsheetIdPresent: Boolean(spreadsheetId),
-    worksheetTitle: sheet,
-    serviceAccountEmailPresent: hasEmail,
-    serviceAccountPrivateKeyPresent: hasKey,
-    adminRecipientsCount: adminEmails.length
-  });
+app.get('/', (_req, res) => {
+  res.send('Project Catalyst API running');
 });
 
-// Friendly root route for convenience when visiting http://localhost:3001/
-app.get('/', (_req, res) => {
-  res.type('text/plain').send('Project Catalyst API is running. Try /api/health');
-});
+/* =========================
+   Start server
+========================= */
 
 app.listen(port, () => {
-  console.log(`API server listening on http://localhost:${port}`);
+  console.log(`🚀 API running on port ${port}`);
 });
-
-
