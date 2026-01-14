@@ -32,36 +32,20 @@ const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 app.use(helmet());
 
-/* 🔒 FIXED CORS CONFIG (IMPORTANT) */
-const allowedOrigins = [
-  'https://project-catalyst-three.vercel.app',
-  'https://project-catalyst-pee06yx58-rushizk12s-projects.vercel.app',
-];
-
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // allow curl / health checks
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      return callback(new Error('Not allowed by CORS'));
-    },
+    origin: [
+      'https://project-catalyst-three.vercel.app',
+      'https://project-catalyst-pee06yxs-rushizk12s-projects.vercel.app'
+    ],
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type'],
   })
 );
 
-/* ✅ Preflight support */
 app.options('*', cors());
 
 app.use(express.json({ limit: '1mb' }));
-
-app.use(
-  '/api/',
-  rateLimit({
-    windowMs: 60_000,
-    max: 30,
-  })
-);
 
 /* =========================
    Zod schemas
