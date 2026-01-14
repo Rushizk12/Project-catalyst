@@ -16,7 +16,7 @@ const app = express();
 const port = Number(process.env.PORT) || 3001;
 
 /* =========================
-   Gemini AI setup (CORRECT)
+   Gemini AI setup
 ========================= */
 
 const apiKey = process.env.GEMINI_API_KEY;
@@ -31,7 +31,28 @@ const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 ========================= */
 
 app.use(helmet());
-app.use(cors({ origin: true }));
+
+/* 🔒 FIXED CORS CONFIG (IMPORTANT) */
+const allowedOrigins = [
+  'https://project-catalyst-three.vercel.app',
+  'https://project-catalyst-pee06yx58-rushizk12s-projects.vercel.app',
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true); // allow curl / health checks
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error('Not allowed by CORS'));
+    },
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type'],
+  })
+);
+
+/* ✅ Preflight support */
+app.options('*', cors());
+
 app.use(express.json({ limit: '1mb' }));
 
 app.use(
@@ -137,8 +158,6 @@ ${parsed.data.description}
       config: {
         responseMimeType: 'application/json',
         responseSchema: analysisSchema,
-        temperature: 0.6,
-        maxOutputTokens: 500,
       },
     });
 
