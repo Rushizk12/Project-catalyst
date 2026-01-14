@@ -32,20 +32,36 @@ const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 app.use(helmet());
 
+/* 🔒 FIXED CORS CONFIG (IMPORTANT) */
+const allowedOrigins = [
+  'https://project-catalyst-three.vercel.app',
+  'https://project-catalyst-pee06yx58-rushizk12s-projects.vercel.app',
+];
+
 app.use(
   cors({
-    origin: [
-      'https://project-catalyst-three.vercel.app',
-      'https://project-catalyst-pee06yxs-rushizk12s-projects.vercel.app'
-    ],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true); // allow curl / health checks
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error('Not allowed by CORS'));
+    },
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type'],
   })
 );
 
+/* ✅ Preflight support */
 app.options('*', cors());
 
 app.use(express.json({ limit: '1mb' }));
+
+app.use(
+  '/api/',
+  rateLimit({
+    windowMs: 60_000,
+    max: 30,
+  })
+);
 
 /* =========================
    Zod schemas
@@ -180,7 +196,13 @@ app.post('/api/chat', async (req, res) => {
 
 app.post('/api/submit', async (req, res) => {
   const parsed = SubmitBody.safeParse(req.body);
-  if (!parsed.success) return res.status(400).send('Invalid input');
+  
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: 'Validation failed',
+      issues: parsed.error.issues,
+    });
+  }
 
   try {
     const d = parsed.data;
