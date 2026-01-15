@@ -5,12 +5,19 @@ import { AIAnalysis, ChatMessage, ProjectFormData } from '../types';
 /* 🔐 Read backend URL from Vercel env */
 const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+// Don't hard-crash the UI when env vars aren't configured.
+// Falls back to the deployed backend; override via VITE_API_BASE_URL.
+const FALLBACK_API_BASE_URL = 'https://project-catalyst-backend.onrender.com';
+
 if (!RAW_API_BASE_URL) {
-  throw new Error('VITE_API_BASE_URL is not defined');
+  // eslint-disable-next-line no-console
+  console.warn(
+    'VITE_API_BASE_URL is not defined; falling back to ' + FALLBACK_API_BASE_URL
+  );
 }
 
 /* ✅ Remove trailing slash if present */
-const API_BASE_URL = RAW_API_BASE_URL.replace(/\/$/, '');
+const API_BASE_URL = (RAW_API_BASE_URL || FALLBACK_API_BASE_URL).replace(/\/$/, '');
 
 const api = (path: string) => `${API_BASE_URL}${path}`;
 

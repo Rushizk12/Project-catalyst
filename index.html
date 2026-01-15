@@ -4,7 +4,18 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://project-catalyst-backend.onrender.com" />
+
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        img-src 'self' data:;
+        connect-src 'self' ws: wss: https://project-catalyst-backend.onrender.com https://*.onrender.com;
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://esm.sh;
+        style-src 'self' 'unsafe-inline'
+      "
+    />
+
     <title>Project Catalyst</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -61,8 +72,8 @@
       }
     }
     </script>
-    
   </head>
+
   <body class="bg-background text-text-primary">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
