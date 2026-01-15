@@ -323,11 +323,9 @@ export async function trySendSubmissionEmails(payload: SubmissionEmailPayload) {
     (result as any).client = true;
     console.info(`Email(client) messageId=${clientInfo.messageId} to=${payload.email}`);
 
-    // Admin notification
+    // Admin notification (no header image, just simple notification)
     if (adminTo) {
       const htmlAdmin = makeHtml(payload, {
-        headerCid: assets.headerCid,
-        headerUrl,
         brandColor: process.env.BRAND_COLOR,
         brandName: process.env.EMAIL_FROM_NAME,
       });
@@ -340,7 +338,7 @@ export async function trySendSubmissionEmails(payload: SubmissionEmailPayload) {
         text: textAdmin,
         html: htmlAdmin,
         headers,
-        attachments,
+        // No attachments for admin email
       });
       (result as any).admin = true;
       console.info(
