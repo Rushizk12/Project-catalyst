@@ -34,6 +34,10 @@ function getTransporter(): Transporter {
     );
   }
 
+  const debugEnabled = (process.env.SMTP_DEBUG || '').toLowerCase() === 'true';
+
+  // Note: Gmail can be slow to accept connections on cold starts.
+  // A too-low connectionTimeout causes false "Connection timeout" failures.
   return nodemailer.createTransport({
     host,
     port,
@@ -42,8 +46,11 @@ function getTransporter(): Transporter {
     pool: true,
     maxConnections: 3,
     maxMessages: 50,
-    connectionTimeout: 20_000,
-    socketTimeout: 30_000,
+    connectionTimeout: 60_000,
+    greetingTimeout: 30_000,
+    socketTimeout: 60_000,
+    logger: debugEnabled,
+    debug: debugEnabled,
   });
 }
 
@@ -301,7 +308,12 @@ export async function trySendSubmissionEmails(payload: SubmissionEmailPayload) {
 
     // Admin notification
     if (admin) {
-  const htmlAdmin = makeHtml(payload, { headerCid: assets.headerCid, headerUrl, brandColor: process.env.BRAND_COLOR, brandName: process.env.EMAIL_FROM_NAME });
+      const htmlAdmin = makeHtml(payload, {
+        headerCid: assets.headerCid,
+        headerUrl,
+        brandColor: process.env.BRAND_COLOR,
+        brandName: process.env.EMAIL_FROM_NAME,
+      });
       const textAdmin = makeText(payload);
       const adminInfo = await transporter.sendMail({
         from,
@@ -319,7 +331,19 @@ export async function trySendSubmissionEmails(payload: SubmissionEmailPayload) {
 
     return result;
   } catch (err) {
-    console.warn('Email send skipped/failed:', err instanceof Error ? err.stack || err.message : err);
+    const safeSmtpConfig = {
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      secure: process.env.SMTP_SECURE,
+      userSet: Boolean(process.env.SMTP_USER),
+      passSet: Boolean(process.env.SMTP_PASS),
+    };
+    console.warn(
+      'Email send skipped/failed:',
+      err instanceof Error ? err.stack || err.message : err,
+      '\nSMTP config (safe):',
+      safeSmtpConfig
+    );
     return result;
   }
 }
