@@ -44,6 +44,10 @@
    SMTP_PORT=587
    SMTP_USER=your_email@gmail.com
    SMTP_PASS=your_app_password
+   # Can be either a raw email (we'll add the display name) OR a full formatted address.
+   # Examples:
+   # EMAIL_FROM=your_email@gmail.com
+   # EMAIL_FROM=Your Name <your_email@gmail.com>
    EMAIL_FROM=Your Name <your_email@gmail.com>
    EMAIL_FROM_NAME=Project Catalyst
    ADMIN_NOTIFICATION_EMAILS=admin@example.com

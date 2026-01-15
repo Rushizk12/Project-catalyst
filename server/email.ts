@@ -55,8 +55,17 @@ function getTransporter(): Transporter {
 }
 
 function getFromAddress() {
-  const email = process.env.EMAIL_FROM || process.env.SMTP_USER || 'no-reply@example.com';
   const brand = process.env.EMAIL_FROM_NAME || 'Project Catalyst';
+
+  // Allow either:
+  // - EMAIL_FROM="Your Name <you@example.com>" (already formatted)
+  // - EMAIL_FROM="you@example.com" (we'll add the display name)
+  const configured = (process.env.EMAIL_FROM || '').trim();
+  if (configured && configured.includes('<') && configured.includes('>')) {
+    return configured;
+  }
+
+  const email = configured || process.env.SMTP_USER || 'no-reply@example.com';
   return `"${brand}" <${email}>`;
 }
 
@@ -265,7 +274,15 @@ export async function trySendSubmissionEmails(payload: SubmissionEmailPayload) {
     const transporter = getTransporter();
     const from = getFromAddress();
     const support = process.env.SUPPORT_EMAIL || process.env.REPLY_TO || undefined;
-    const admin = process.env.NOTIFY_EMAIL || process.env.EMAIL_TO || '';
+
+    // Support the env var name used in DEPLOYMENT.md/render.yaml, plus legacy names.
+    const adminRaw =
+      process.env.ADMIN_NOTIFICATION_EMAILS || process.env.NOTIFY_EMAIL || process.env.EMAIL_TO || '';
+    const adminList = adminRaw
+      .split(/[;,]/)
+      .map(s => s.trim())
+      .filter(Boolean);
+    const adminTo = adminList.length > 0 ? adminList : undefined;
     const submissionId = makeSubmissionId();
 
     // Prepare optional inline images
@@ -307,7 +324,7 @@ export async function trySendSubmissionEmails(payload: SubmissionEmailPayload) {
     console.info(`Email(client) messageId=${clientInfo.messageId} to=${payload.email}`);
 
     // Admin notification
-    if (admin) {
+    if (adminTo) {
       const htmlAdmin = makeHtml(payload, {
         headerCid: assets.headerCid,
         headerUrl,
@@ -317,7 +334,7 @@ export async function trySendSubmissionEmails(payload: SubmissionEmailPayload) {
       const textAdmin = makeText(payload);
       const adminInfo = await transporter.sendMail({
         from,
-        to: admin,
+        to: adminTo,
         replyTo: payload.email,
         subject: `New submission — ${subjectBase} [${submissionId}]`,
         text: textAdmin,
@@ -326,7 +343,9 @@ export async function trySendSubmissionEmails(payload: SubmissionEmailPayload) {
         attachments,
       });
       (result as any).admin = true;
-      console.info(`Email(admin) messageId=${adminInfo.messageId} to=${admin}`);
+      console.info(
+        `Email(admin) messageId=${adminInfo.messageId} to=${Array.isArray(adminTo) ? adminTo.join(',') : adminTo}`
+      );
     }
 
     return result;

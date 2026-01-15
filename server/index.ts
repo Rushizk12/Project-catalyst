@@ -239,6 +239,9 @@ app.post('/api/submit', async (req, res) => {
       projectType: d.projectType,
       budget: d.budget,
       aiAnalysis: d.aiAnalysis || undefined,
+    }).then(r => {
+      // This route returns quickly; this log is your confirmation in Render logs.
+      console.log('📧 Email send result:', r);
     });
 
     console.log('✅ Submission successful!');
