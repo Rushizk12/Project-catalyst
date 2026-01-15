@@ -23,7 +23,6 @@ const formatINR = (amount: number): string => {
   }).format(amount);
 };
 
-// Define inner components inside the file but outside the main component
 const FormInput: React.FC<{
   id: string;
   label: string;
@@ -105,7 +104,14 @@ const ProjectForm: React.FC = () => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    // ✅ Debug: Log the form data being submitted
+    // ✅ CRITICAL: Validate all fields are filled
+    if (!formData.name || !formData.email || !formData.phoneNumber || 
+        !formData.collegeName || !formData.address || !formData.projectTitle || 
+        !formData.projectDescription) {
+      setSubmitError('Please fill out all required fields.');
+      return;
+    }
+    
     console.log('📤 Form data being submitted:', formData);
     
     setIsSubmitting(true);
@@ -195,7 +201,6 @@ const ProjectForm: React.FC = () => {
             <div>
               <label htmlFor="projectType" className="block text-sm font-medium text-text-secondary mb-1">Project Type</label>
               <select id="projectType" name="projectType" value={formData.projectType} onChange={handleInputChange} required className="w-full bg-background border border-border rounded-lg p-3 text-text-primary focus:ring-2 focus:ring-primary focus:border-primary transition">
-                <option value="" disabled>Select a type</option>
                 <option value="web">Web Development</option>
                 <option value="mobile">Mobile App Development</option>
                 <option value="design">UI/UX Design</option>
