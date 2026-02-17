@@ -60,15 +60,12 @@ export const chatWithGemini = async (
 export const submitProject = async (
   payload: ProjectFormData & { aiAnalysis: AIAnalysis | null }
 ): Promise<void> => {
-  // ✅ Extract only the fields the backend expects (remove aiAnalysis)
-  const { aiAnalysis, ...formData } = payload;
-  
-  console.log('📤 Sending to backend:', formData);
+  console.log('📤 Sending to backend:', payload);
   
   const res = await fetch(api('/api/submit'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(formData),
+    body: JSON.stringify(payload),
   });
 
   if (!res.ok) {
