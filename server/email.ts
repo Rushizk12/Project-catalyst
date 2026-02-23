@@ -26,7 +26,8 @@ function getTransporter(): Transporter {
   const port = Number(process.env.SMTP_PORT || 587);
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
-  const secure = (process.env.SMTP_SECURE || '').toLowerCase() === 'true' || port === 465;
+  const secure =
+    (process.env.SMTP_SECURE || '').toLowerCase() === 'true' || port === 465;
 
   if (!host || !user || !pass) {
     throw new Error(
@@ -97,39 +98,55 @@ function escapeAttr(str: string | undefined | null) {
 
 function makeHtml(
   payload: SubmissionEmailPayload,
-  opts?: { headerCid?: string; headerUrl?: string; brandColor?: string; brandName?: string }
+  opts?: {
+    headerCid?: string;
+    headerUrl?: string;
+    brandColor?: string;
+    brandName?: string;
+  }
 ) {
   const analysis = payload.aiAnalysis;
   const brandColor = opts?.brandColor || process.env.BRAND_COLOR || '#0f766e';
-  const brandName = opts?.brandName || process.env.EMAIL_FROM_NAME || 'Project Catalyst';
+  const brandName =
+    opts?.brandName || process.env.EMAIL_FROM_NAME || 'Project Catalyst';
   return `
   <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,&quot;Helvetica Neue&quot;,Noto Sans,sans-serif;line-height:1.5">
-    ${opts?.headerUrl ? `
+    ${
+      opts?.headerUrl
+        ? `
       <div style="max-width:640px;margin:0 auto;border-radius:12px;overflow:hidden">
         <img src="${escapeAttr(opts.headerUrl)}" alt="${escapeAttr(brandName)}" style="display:block;width:100%;height:auto;border:0"/>
       </div>
-    ` : opts?.headerCid ? `
+    `
+        : opts?.headerCid
+          ? `
       <div style="max-width:640px;margin:0 auto;border-radius:12px;overflow:hidden">
         <img src="cid:${escapeAttr(opts.headerCid)}" alt="${escapeAttr(brandName)}" style="display:block;width:100%;height:auto;border:0"/>
       </div>
-    ` : `
+    `
+          : `
       <div style="max-width:640px;margin:0 auto;background:${brandColor};color:#fff;padding:10px 16px;border-radius:12px">
         <strong>${escapeHtml(brandName)}</strong>
       </div>
-    `}
+    `
+    }
     <h2 style="margin:0 0 12px">${escapeHtml(payload.projectTitle)}</h2>
     <p style="margin:0 0 8px">From: <strong>${escapeHtml(payload.name)}</strong> &lt;${escapeHtml(payload.email)}&gt;</p>
     <p style="margin:0 0 8px">Type: ${escapeHtml(payload.projectType)} · Budget: ${escapeHtml(payload.budget)}</p>
     <h3 style="margin:16px 0 8px">Description</h3>
     <p style="white-space:pre-wrap">${escapeHtml(payload.projectDescription)}</p>
-    ${analysis ? `
+    ${
+      analysis
+        ? `
       <h3 style="margin:16px 0 8px">AI Analysis</h3>
       <ul>
         ${analysis.summary ? `<li><strong>Summary:</strong> ${escapeHtml(analysis.summary)}</li>` : ''}
         ${analysis.category ? `<li><strong>Category:</strong> ${escapeHtml(analysis.category)}</li>` : ''}
         ${analysis.estimatedComplexity ? `<li><strong>Complexity:</strong> ${escapeHtml(analysis.estimatedComplexity)}</li>` : ''}
       </ul>
-    ` : ''}
+    `
+        : ''
+    }
   </div>
   `;
 }
@@ -145,9 +162,12 @@ function makeText(payload: SubmissionEmailPayload) {
   ];
   if (payload.aiAnalysis) {
     lines.push('', 'AI Analysis:');
-    if (payload.aiAnalysis.summary) lines.push(`- Summary: ${payload.aiAnalysis.summary}`);
-    if (payload.aiAnalysis.category) lines.push(`- Category: ${payload.aiAnalysis.category}`);
-    if (payload.aiAnalysis.estimatedComplexity) lines.push(`- Complexity: ${payload.aiAnalysis.estimatedComplexity}`);
+    if (payload.aiAnalysis.summary)
+      lines.push(`- Summary: ${payload.aiAnalysis.summary}`);
+    if (payload.aiAnalysis.category)
+      lines.push(`- Category: ${payload.aiAnalysis.category}`);
+    if (payload.aiAnalysis.estimatedComplexity)
+      lines.push(`- Complexity: ${payload.aiAnalysis.estimatedComplexity}`);
   }
   return lines.join('\n');
 }
@@ -169,19 +189,24 @@ function makeClientHtml(
   <div style="font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,Cantarell,'Helvetica Neue',Noto Sans,sans-serif;line-height:1.6;background:#f6f7f9;padding:24px">
     <span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden">${escapeHtml(preheader)}</span>
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden">
-      ${opts?.headerUrl ? `
+      ${
+        opts?.headerUrl
+          ? `
         <tr>
           <td style="padding:0;background:#000">
             <img src="${escapeAttr(opts.headerUrl)}" alt="${escapeAttr(process.env.EMAIL_FROM_NAME || 'Project Catalyst')}" width="640" style="display:block;width:100%;height:auto;border:0"/>
           </td>
         </tr>
-      ` : opts?.headerCid ? `
+      `
+          : opts?.headerCid
+            ? `
         <tr>
           <td style="padding:0;background:#000">
             <img src="cid:${escapeAttr(opts.headerCid)}" alt="${escapeAttr(process.env.EMAIL_FROM_NAME || 'Project Catalyst')}" width="640" style="display:block;width:100%;height:auto;border:0"/>
           </td>
         </tr>
-      ` : `
+      `
+            : `
         <tr>
           <td style="padding:20px 24px;background:${brandColor}">
             <table width="100%"><tr>
@@ -192,7 +217,8 @@ function makeClientHtml(
             </tr></table>
           </td>
         </tr>
-      `}
+      `
+      }
 
       <tr>
         <td style="padding:24px">
@@ -222,14 +248,18 @@ function makeClientHtml(
           <h3 style="margin:16px 0 8px">Your description</h3>
           <p style="white-space:pre-wrap;margin:0 0 12px">${escapeHtml(payload.projectDescription)}</p>
 
-          ${analysis ? `
+          ${
+            analysis
+              ? `
             <h3 style="margin:16px 0 8px">AI Analysis</h3>
             <ul style="margin:0 0 12px 18px;padding:0">
               ${analysis.summary ? `<li><strong>Summary:</strong> ${escapeHtml(analysis.summary)}</li>` : ''}
               ${analysis.category ? `<li><strong>Category:</strong> ${escapeHtml(analysis.category)}</li>` : ''}
               ${analysis.estimatedComplexity ? `<li><strong>Complexity:</strong> ${escapeHtml(analysis.estimatedComplexity)}</li>` : ''}
             </ul>
-          ` : ''}
+          `
+              : ''
+          }
 
           <p style="margin-top:24px;color:#6b7280;font-size:12px">If anything looks off, reply to this email with updates. We’ll track your update using your Submission ID.</p>
         </td>
@@ -257,7 +287,8 @@ function makeClientText(payload: SubmissionEmailPayload, submissionId: string) {
     '2) Proposal with timeline if it’s a fit',
     '3) Kickoff call',
     '',
-    'Book a quick call: ' + (process.env.CLIENT_CTA_URL || 'https://example.com/book'),
+    'Book a quick call: ' +
+      (process.env.CLIENT_CTA_URL || 'https://example.com/book'),
     '',
     base,
   ].join('\n');
@@ -268,38 +299,54 @@ function makeClientText(payload: SubmissionEmailPayload, submissionId: string) {
    --------------------------- */
 
 export async function trySendSubmissionEmails(payload: SubmissionEmailPayload) {
-  const result = { client: false, admin: false } as const;
+  const result = { client: false, admin: false };
 
   try {
     const transporter = getTransporter();
     const from = getFromAddress();
-    const support = process.env.SUPPORT_EMAIL || process.env.REPLY_TO || undefined;
+    const support =
+      process.env.SUPPORT_EMAIL || process.env.REPLY_TO || undefined;
 
     // Support the env var name used in DEPLOYMENT.md/render.yaml, plus legacy names.
     const adminRaw =
-      process.env.ADMIN_NOTIFICATION_EMAILS || process.env.NOTIFY_EMAIL || process.env.EMAIL_TO || '';
+      process.env.ADMIN_NOTIFICATION_EMAILS ||
+      process.env.NOTIFY_EMAIL ||
+      process.env.EMAIL_TO ||
+      '';
     const adminList = adminRaw
       .split(/[;,]/)
-      .map(s => s.trim())
+      .map((s) => s.trim())
       .filter(Boolean);
     const adminTo = adminList.length > 0 ? adminList : undefined;
     const submissionId = makeSubmissionId();
 
     // Prepare optional inline images
-    const attachments: Array<any> = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const attachments: any[] = [];
     const assets: { headerCid?: string; logoCid?: string } = {};
     const headerPath = process.env.EMAIL_HEADER_IMAGE_PATH;
     const headerUrl = process.env.EMAIL_HEADER_IMAGE_URL;
     if (headerPath) {
       assets.headerCid = 'brandHeader';
-      attachments.push({ filename: 'header.png', path: headerPath, cid: assets.headerCid });
+      attachments.push({
+        filename: 'header.png',
+        path: headerPath,
+        cid: assets.headerCid,
+      });
     }
     if (process.env.EMAIL_LOGO_PATH) {
       assets.logoCid = 'brandLogo';
-      attachments.push({ filename: 'logo.png', path: process.env.EMAIL_LOGO_PATH, cid: assets.logoCid });
+      attachments.push({
+        filename: 'logo.png',
+        path: process.env.EMAIL_LOGO_PATH,
+        cid: assets.logoCid,
+      });
     }
 
-    const htmlClient = makeClientHtml(payload, submissionId, { ...assets, headerUrl });
+    const htmlClient = makeClientHtml(payload, submissionId, {
+      ...assets,
+      headerUrl,
+    });
     const textClient = makeClientText(payload, submissionId);
     const subjectBase = `Project Catalyst: ${payload.projectTitle}`;
     const clientSubject = `Thanks — We received your project (${submissionId.slice(0, 8)})`;
@@ -320,8 +367,10 @@ export async function trySendSubmissionEmails(payload: SubmissionEmailPayload) {
       headers,
       attachments,
     });
-    (result as any).client = true;
-    console.info(`Email(client) messageId=${clientInfo.messageId} to=${payload.email}`);
+    result.client = true;
+    console.info(
+      `Email(client) messageId=${clientInfo.messageId} to=${payload.email}`
+    );
 
     // Admin notification (no header image, just simple notification)
     if (adminTo) {
@@ -340,9 +389,11 @@ export async function trySendSubmissionEmails(payload: SubmissionEmailPayload) {
         headers,
         // No attachments for admin email
       });
-      (result as any).admin = true;
+      result.admin = true;
       console.info(
-        `Email(admin) messageId=${adminInfo.messageId} to=${Array.isArray(adminTo) ? adminTo.join(',') : adminTo}`
+        `Email(admin) messageId=${adminInfo.messageId} to=${
+          Array.isArray(adminTo) ? adminTo.join(',') : adminTo
+        }`
       );
     }
 

@@ -17,7 +17,10 @@ if (!RAW_API_BASE_URL) {
 }
 
 /* ✅ Remove trailing slash if present */
-const API_BASE_URL = (RAW_API_BASE_URL || FALLBACK_API_BASE_URL).replace(/\/$/, '');
+const API_BASE_URL = (RAW_API_BASE_URL || FALLBACK_API_BASE_URL).replace(
+  /\/$/,
+  ''
+);
 
 const api = (path: string) => `${API_BASE_URL}${path}`;
 
@@ -32,7 +35,7 @@ export const analyzeProjectDescription = async (
   });
 
   if (!res.ok) {
-    throw new Error(await res.text() || 'Failed to analyze project');
+    throw new Error((await res.text()) || 'Failed to analyze project');
   }
 
   return res.json();
@@ -49,7 +52,7 @@ export const chatWithGemini = async (
   });
 
   if (!res.ok) {
-    throw new Error(await res.text() || 'Failed to chat');
+    throw new Error((await res.text()) || 'Failed to chat');
   }
 
   const data = await res.json();
@@ -62,9 +65,9 @@ export const submitProject = async (
 ): Promise<void> => {
   // ✅ Extract only the fields the backend expects (remove aiAnalysis)
   const { aiAnalysis, ...formData } = payload;
-  
+
   console.log('📤 Sending to backend:', formData);
-  
+
   const res = await fetch(api('/api/submit'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -76,6 +79,6 @@ export const submitProject = async (
     console.error('❌ Backend error:', errorText);
     throw new Error(errorText || 'Failed to submit');
   }
-  
+
   console.log('✅ Project submitted successfully!');
 };

@@ -1,4 +1,3 @@
-
 export interface ProjectFormData {
   name: string;
   email: string;
@@ -13,7 +12,12 @@ export interface ProjectFormData {
 
 export interface AIAnalysis {
   summary: string;
-  category: 'Web Development' | 'Mobile App Development' | 'UI/UX Design' | 'Other'|'Hardware';
+  category:
+    | 'Web Development'
+    | 'Mobile App Development'
+    | 'UI/UX Design'
+    | 'Other'
+    | 'Hardware';
   estimatedComplexity: 'Low' | 'Medium' | 'High';
 }
 

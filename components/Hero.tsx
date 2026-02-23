@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface HeroProps {
@@ -12,7 +11,9 @@ const Hero: React.FC<HeroProps> = ({ onGetStartedClick }) => {
         Turn Your Vision into Reality...
       </h1>
       <p className="mt-4 max-w-2xl mx-auto text-lg sm:text-xl text-text-secondary">
-         Have a project idea? I build high-quality, modern web and mobile applications tailored to your needs. Let's build something amazing together.
+        Have a project idea? I build high-quality, modern web and mobile
+        applications tailored to your needs. Let's build something amazing
+        together.
       </p>
       <div className="mt-8 flex justify-center">
         <button
