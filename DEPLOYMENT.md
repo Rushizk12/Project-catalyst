@@ -1,6 +1,7 @@
 # Deployment Guide
 
 ## Overview
+
 - **Frontend**: Vercel (React + Vite)
 - **Backend**: Render (Node.js + Express)
 
@@ -9,6 +10,7 @@
 ## Step 1: Deploy Backend on Render
 
 1. **Push your code to GitHub** (if not already):
+
    ```bash
    git init
    git add .
@@ -33,6 +35,7 @@
    - **Instance Type**: Free (or paid for better performance)
 
 5. **Add Environment Variables** (click "Advanced" → "Add Environment Variable"):
+
    ```
    NODE_ENV=production
    PORT=3001
@@ -95,10 +98,12 @@
 If you encounter CORS errors, update your backend's CORS configuration in `server/index.ts`:
 
 ```typescript
-app.use(cors({ 
-  origin: ['https://your-project.vercel.app', 'http://localhost:5173'], 
-  credentials: false 
-}));
+app.use(
+  cors({
+    origin: ['https://your-project.vercel.app', 'http://localhost:5173'],
+    credentials: false,
+  })
+);
 ```
 
 Then redeploy your backend on Render (it will auto-redeploy when you push to GitHub).
@@ -122,16 +127,19 @@ Then redeploy your backend on Render (it will auto-redeploy when you push to Git
 ## Troubleshooting
 
 ### Backend Issues:
+
 - Check Render logs: Dashboard → Your Service → Logs
 - Verify all environment variables are set correctly
 - Ensure Google Service Account has access to the spreadsheet
 
 ### Frontend Issues:
+
 - Check Vercel deployment logs
 - Verify the backend URL in `vercel.json` is correct
 - Check browser console for errors
 
 ### CORS Issues:
+
 - Update CORS origin in `server/index.ts`
 - Redeploy backend
 
@@ -140,9 +148,11 @@ Then redeploy your backend on Render (it will auto-redeploy when you push to Git
 ## Updating Your Site
 
 ### Frontend Updates:
+
 - Push changes to GitHub → Vercel auto-deploys
 
 ### Backend Updates:
+
 - Push changes to GitHub → Render auto-deploys
 
 ---
@@ -150,15 +160,18 @@ Then redeploy your backend on Render (it will auto-redeploy when you push to Git
 ## Free Tier Limitations
 
 **Render Free Tier**:
+
 - Service spins down after 15 minutes of inactivity
 - First request after spin-down takes ~30 seconds
 - 750 hours/month free
 
 **Vercel Free Tier**:
+
 - Unlimited deployments
 - 100 GB bandwidth/month
 - Automatic HTTPS
 
 **Upgrade for Production**:
+
 - Render: $7/month for always-on instance
 - Vercel: Pro plan if needed ($20/month)
