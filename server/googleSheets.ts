@@ -7,13 +7,15 @@ function getJwtClient() {
   const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   let privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
   if (!clientEmail || !privateKey) {
-    throw new Error('Missing Google service account credentials. Set GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY.');
+    throw new Error(
+      'Missing Google service account credentials. Set GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY.',
+    );
   }
   privateKey = privateKey.replace(/\\n/g, '\n');
   return new google.auth.JWT({
     email: clientEmail,
     key: privateKey,
-    scopes: requiredScopes
+    scopes: requiredScopes,
   });
 }
 
@@ -34,8 +36,8 @@ export async function appendSubmissionRow(rowValues: (string | number | null)[])
     valueInputOption: 'USER_ENTERED',
     insertDataOption: 'INSERT_ROWS',
     requestBody: {
-      values: [rowValues]
-    }
+      values: [rowValues],
+    },
   });
 }
 
@@ -44,5 +46,3 @@ export function extractSpreadsheetIdFromUrl(url: string): string | null {
   const match = url.match(/spreadsheets\/(?:d|u\/\d\/d)\/([^/]+)/);
   return match ? match[1] : null;
 }
-
-

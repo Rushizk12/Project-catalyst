@@ -5,7 +5,10 @@ import { chatWithGemini } from '../services/geminiService';
 const Chatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'model', content: "Hi! I'm here to help with your project. Ask about features, timelines, or pricing." }
+    {
+      role: 'model',
+      content: "Hi! I'm here to help with your project. Ask about features, timelines, or pricing.",
+    },
   ]);
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -16,7 +19,9 @@ const Chatbot: React.FC = () => {
     const seen = typeof window !== 'undefined' ? window.localStorage.getItem('chatbot_seen') : '1';
     if (!seen) {
       setIsOpen(true);
-      try { window.localStorage.setItem('chatbot_seen', '1'); } catch {}
+      try {
+        window.localStorage.setItem('chatbot_seen', '1');
+      } catch {}
     }
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen]);
@@ -30,10 +35,10 @@ const Chatbot: React.FC = () => {
     setIsSending(true);
     try {
       const reply = await chatWithGemini(nextMessages);
-      setMessages(prev => [...prev, { role: 'model', content: reply }]);
+      setMessages((prev) => [...prev, { role: 'model', content: reply }]);
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : 'Something went wrong.';
-      setMessages(prev => [...prev, { role: 'model', content: errorMessage }]);
+      setMessages((prev) => [...prev, { role: 'model', content: errorMessage }]);
     } finally {
       setIsSending(false);
     }
@@ -55,11 +60,29 @@ const Chatbot: React.FC = () => {
         <button
           onClick={() => setIsOpen(true)}
           className="bg-secondary text-white rounded-full w-14 h-14 shadow-lg hover:bg-green-600 transition flex items-center justify-center"
-          style={{ width: 56, height: 56, borderRadius: 9999, background: '#10B981', color: '#fff', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)' }}
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 9999,
+            background: '#10B981',
+            color: '#fff',
+            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)',
+          }}
           aria-label="Open chat"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3.75h6.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-7 h-7"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M7.5 8.25h9m-9 3.75h6.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
         </button>
       )}
@@ -71,13 +94,25 @@ const Chatbot: React.FC = () => {
               <span className="inline-flex h-2 w-2 rounded-full bg-green-500"></span>
               <span className="text-text-primary font-semibold">Project Assistant</span>
             </div>
-            <button onClick={() => setIsOpen(false)} className="text-text-secondary hover:text-text-primary">×</button>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="text-text-secondary hover:text-text-primary"
+            >
+              ×
+            </button>
           </div>
 
           <div className="flex-1 p-3 space-y-3 overflow-y-auto max-h-96 bg-background/60">
             {messages.map((m, idx) => (
-              <div key={idx} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`${m.role === 'user' ? 'bg-primary text-white' : 'bg-surface text-text-primary'} px-3 py-2 rounded-lg max-w-[85%] whitespace-pre-wrap`}>{m.content}</div>
+              <div
+                key={idx}
+                className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`${m.role === 'user' ? 'bg-primary text-white' : 'bg-surface text-text-primary'} px-3 py-2 rounded-lg max-w-[85%] whitespace-pre-wrap`}
+                >
+                  {m.content}
+                </div>
               </div>
             ))}
             <div ref={endRef} />
@@ -87,7 +122,7 @@ const Chatbot: React.FC = () => {
             <div className="flex items-center gap-2">
               <input
                 value={input}
-                onChange={e => setInput(e.target.value)}
+                onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type your message..."
                 className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-text-primary focus:ring-2 focus:ring-primary focus:border-primary"
@@ -100,7 +135,9 @@ const Chatbot: React.FC = () => {
                 {isSending ? 'Sending…' : 'Send'}
               </button>
             </div>
-            <p className="mt-2 text-[11px] text-text-secondary">Powered by Gemini. Don’t share sensitive info.</p>
+            <p className="mt-2 text-[11px] text-text-secondary">
+              Powered by Gemini. Don’t share sensitive info.
+            </p>
           </div>
         </div>
       )}
@@ -109,5 +146,3 @@ const Chatbot: React.FC = () => {
 };
 
 export default Chatbot;
-
-

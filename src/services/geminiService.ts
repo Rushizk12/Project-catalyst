@@ -10,10 +10,7 @@ const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const FALLBACK_API_BASE_URL = 'https://project-catalyst-backend.onrender.com';
 
 if (!RAW_API_BASE_URL) {
-  // eslint-disable-next-line no-console
-  console.warn(
-    'VITE_API_BASE_URL is not defined; falling back to ' + FALLBACK_API_BASE_URL
-  );
+  console.warn('VITE_API_BASE_URL is not defined; falling back to ' + FALLBACK_API_BASE_URL);
 }
 
 /* ✅ Remove trailing slash if present */
@@ -22,9 +19,7 @@ const API_BASE_URL = (RAW_API_BASE_URL || FALLBACK_API_BASE_URL).replace(/\/$/, 
 const api = (path: string) => `${API_BASE_URL}${path}`;
 
 /* ✅ Analyze project description */
-export const analyzeProjectDescription = async (
-  description: string
-): Promise<AIAnalysis> => {
+export const analyzeProjectDescription = async (description: string): Promise<AIAnalysis> => {
   const res = await fetch(api('/api/analyze'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -32,16 +27,14 @@ export const analyzeProjectDescription = async (
   });
 
   if (!res.ok) {
-    throw new Error(await res.text() || 'Failed to analyze project');
+    throw new Error((await res.text()) || 'Failed to analyze project');
   }
 
   return res.json();
 };
 
 /* ✅ Chat with Gemini */
-export const chatWithGemini = async (
-  messages: ChatMessage[]
-): Promise<string> => {
+export const chatWithGemini = async (messages: ChatMessage[]): Promise<string> => {
   const res = await fetch(api('/api/chat'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -49,7 +42,7 @@ export const chatWithGemini = async (
   });
 
   if (!res.ok) {
-    throw new Error(await res.text() || 'Failed to chat');
+    throw new Error((await res.text()) || 'Failed to chat');
   }
 
   const data = await res.json();
@@ -58,17 +51,14 @@ export const chatWithGemini = async (
 
 /* ✅ Submit project - FIXED VERSION */
 export const submitProject = async (
-  payload: ProjectFormData & { aiAnalysis: AIAnalysis | null }
+  payload: ProjectFormData & { aiAnalysis: AIAnalysis | null },
 ): Promise<void> => {
-  // ✅ Extract only the fields the backend expects (remove aiAnalysis)
-  const { aiAnalysis, ...formData } = payload;
-  
-  console.log('📤 Sending to backend:', formData);
-  
+  console.log('📤 Sending to backend:', payload);
+
   const res = await fetch(api('/api/submit'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(formData),
+    body: JSON.stringify(payload),
   });
 
   if (!res.ok) {
@@ -76,6 +66,6 @@ export const submitProject = async (
     console.error('❌ Backend error:', errorText);
     throw new Error(errorText || 'Failed to submit');
   }
-  
+
   console.log('✅ Project submitted successfully!');
 };
