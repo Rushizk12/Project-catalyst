@@ -1,4 +1,3 @@
-
 # Project Catalyst
 
 A dedicated platform where college students can submit project requirements and get expert freelancing support for academic projects, prototypes, and research work.  
@@ -8,17 +7,18 @@ Simple submission, personalized guidance, and quality outcomes—designed for st
 
 ## Features
 
-- Project submission portal for college students  
-- Freelancing-based technical assistance  
-- Support for prototypes, documentation, and research work  
-- Secure handling of project data  
-- Scalable full-stack architecture  
+- Project submission portal for college students
+- Freelancing-based technical assistance
+- Support for prototypes, documentation, and research work
+- Secure handling of project data
+- Scalable full-stack architecture
 
 ---
 
 ## Run Locally
 
 ### Prerequisites
+
 - Node.js
 - npm
 
@@ -27,3 +27,4 @@ Simple submission, personalized guidance, and quality outcomes—designed for st
 1. Install dependencies:
    ```bash
    npm install
+   ```
