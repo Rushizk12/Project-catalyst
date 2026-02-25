@@ -16,7 +16,7 @@ const Chatbot: React.FC = () => {
     const seen = typeof window !== 'undefined' ? window.localStorage.getItem('chatbot_seen') : '1';
     if (!seen) {
       setIsOpen(true);
-      try { window.localStorage.setItem('chatbot_seen', '1'); } catch {}
+      try { window.localStorage.setItem('chatbot_seen', '1'); } catch { /* ignore */ }
     }
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen]);
